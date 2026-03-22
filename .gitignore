@@ -1,0 +1,8 @@
+venv/
+data\
+.env
+*.png
+*.pyc
+*.json
+data/*.pdf
+data/*.pptx
