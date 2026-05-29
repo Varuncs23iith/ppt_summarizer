@@ -7,10 +7,19 @@ import asyncio
 import httpx
 from database.database_operations import get_slides_by_file_id, get_improvement_by_slide_id
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 def get_gamma_api_key() -> str:
     """Get Gamma API key."""
-    api_key = os.environ.get("GAMMA_API_KEY") or " "
+    api_key = os.environ.get("GAMMA_API_KEY") or os.getenv("GAMMA_API_KEY")
+    if not api_key:
+        raise ValueError(
+            "GAMMA_API_KEY not found. Please set it in .env file or environment variables."
+        )
     return api_key
 
 
@@ -45,7 +54,7 @@ def format_slide_for_gamma(slide_transcription: str, slide_summary: str, improve
     return "\n".join(formatted)
 
 
-async def create_presentation(aggregated_markdown: str, api_key: str) -> str:
+async def create_presentation(aggregated_markdown: str, api_key: str, num_slides: int) -> str:
     """Call Gamma API to create presentation."""
     url = "https://public-api.gamma.app/v1.0/generations"
     headers = {"Content-Type": "application/json", "X-API-KEY": api_key}
@@ -53,7 +62,8 @@ async def create_presentation(aggregated_markdown: str, api_key: str) -> str:
         "inputText": aggregated_markdown,
         "textMode": "preserve",
         "format": "presentation",
-        "exportAs": "pptx"
+        "exportAs": "pptx",
+        "numCards": num_slides
     }
 
     async with httpx.AsyncClient() as client:
@@ -82,11 +92,17 @@ async def poll_generation_status(generation_id: str, api_key: str) -> dict:
 
 
 async def generate_presentation_from_file(file_id: int) -> dict:
-    """Generate Gamma presentation from slides in database."""
+    """
+    Generate Gamma presentation from slides in database.
+
+    :param file_id: File ID from database
+    :return: Dictionary with gammaUrl and exportUrl
+    """
     api_key = get_gamma_api_key()
 
     # Fetch slides
     slides = await get_slides_by_file_id(file_id)
+    num_slides = len(slides)
 
     # Format each slide
     formatted_slides = []
@@ -103,7 +119,7 @@ async def generate_presentation_from_file(file_id: int) -> dict:
 
     # Combine and send to Gamma
     aggregated_markdown = "\n\n/split\n\n".join(formatted_slides)
-    generation_id = await create_presentation(aggregated_markdown, api_key)
+    generation_id = await create_presentation(aggregated_markdown, api_key, num_slides)
     result = await poll_generation_status(generation_id, api_key)
 
     return result

@@ -2,7 +2,11 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from tools.extract_metadata import process_file
 from tools.prepare_config import config
 from tools.create_file_summary import summarize_all_slides
