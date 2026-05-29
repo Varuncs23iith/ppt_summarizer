@@ -21,6 +21,9 @@ class Slides(Base):
     slide_path:Mapped[str] = mapped_column(
         nullable=False
     )
+    slide_transcription:Mapped[str] = mapped_column(
+        nullable=False
+    )
     slide_summary:Mapped[str] = mapped_column(
         nullable=False
     )

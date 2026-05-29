@@ -8,5 +8,5 @@ def get_client()->OpenAI:
     :return: OpenAI client.
     """
     return OpenAI(
-        api_key = os.environ.get("OPENAI_API_KEY")
-    )
+        api_key = os.environ.get("OPENAI_API_KEY"),
+            )

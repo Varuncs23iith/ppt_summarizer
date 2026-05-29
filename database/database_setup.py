@@ -1,5 +1,4 @@
 import psycopg2
-import os
 
 conn = psycopg2.connect(
     dbname="ppt_database",
@@ -11,10 +10,12 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
+# Create schema
 cur.execute("""
 CREATE SCHEMA IF NOT EXISTS ppt_summarizer;
 """)
 
+# Table 1: Files
 cur.execute("""
 CREATE TABLE IF NOT EXISTS ppt_summarizer.files (
     file_id SERIAL PRIMARY KEY,
@@ -24,11 +25,13 @@ CREATE TABLE IF NOT EXISTS ppt_summarizer.files (
 );
 """)
 
+# Table 2: Slides (with transcription, summary, and running summary)
 cur.execute("""
 CREATE TABLE IF NOT EXISTS ppt_summarizer.slide (
     slide_id SERIAL PRIMARY KEY,
     file_id INTEGER NOT NULL,
     slide_path TEXT,
+    slide_transcription TEXT,
     slide_summary TEXT,
     running_summary TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -40,7 +43,29 @@ CREATE TABLE IF NOT EXISTS ppt_summarizer.slide (
 );
 """)
 
+# Table 3: Slide Improvements (scores and suggestions)
+cur.execute("""
+CREATE TABLE IF NOT EXISTS ppt_summarizer.slide_improvement (
+    improvement_id SERIAL PRIMARY KEY,
+    slide_id INTEGER NOT NULL,
+    
+    content_clarity_score FLOAT NOT NULL,
+    visual_design_score FLOAT NOT NULL,
+    information_density_score FLOAT NOT NULL,
+    engagement_score FLOAT NOT NULL,
+    overall_score FLOAT NOT NULL,
+    
+    improvement_points TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_slide
+        FOREIGN KEY(slide_id)
+        REFERENCES ppt_summarizer.slide(slide_id)
+        ON DELETE CASCADE
+);
+""")
 
+# Table 4: Summary (optional - for overall file summary)
 cur.execute("""
 CREATE TABLE IF NOT EXISTS ppt_summarizer.summary (
     summary_id SERIAL PRIMARY KEY,
@@ -52,10 +77,8 @@ CREATE TABLE IF NOT EXISTS ppt_summarizer.summary (
         FOREIGN KEY(file_id)
         REFERENCES ppt_summarizer.files(file_id)
         ON DELETE CASCADE
-
 );
 """)
-
 
 conn.commit()
 cur.close()

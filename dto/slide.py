@@ -6,5 +6,6 @@ class Slide(BaseModel):
 
     file_id: int
     slide_path: str
+    slide_transcription: str
     slide_summary: str
     running_summary: str

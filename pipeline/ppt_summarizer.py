@@ -1,23 +1,24 @@
 import sys
 from pathlib import Path
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from pathlib import Path
 from tools.extract_metadata import process_file
 from tools.prepare_config import config
-from tools.create_file_summary import summarize_slide
+from tools.create_file_summary import summarize_all_slides
 import asyncio
 
-test_file = Path("data/CV_accelarator.pptx")
-slide_path = Path("data/CV_accelarator_page_1.png")
+test_file = Path("data/FedEVI_FL.pptx")
 
 async def main():
-    await process_file(test_file, config)
-    await summarize_slide(slide_path)
+    """Generate slide analysis."""
+    print(f"Processing: {test_file}")
+
+    file_id, pdf_path, output_dir = await process_file(test_file, config)
+    await summarize_all_slides(pdf_path, file_id, output_dir)
+
+    print(f"\n✓ Completed for file_id={file_id}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
